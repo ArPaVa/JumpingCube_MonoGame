@@ -1,0 +1,3 @@
+Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
+"c:/Users/ArPaVa/Documents/VS Code/JumpingCube_MonoGame/JumpingCube/Content/Cube.png","c:/Users/ArPaVa/Documents/VS Code/JumpingCube_MonoGame/JumpingCube/Content/bin/DesktopGL/Cube.xnb","TextureProcessor","Texture2DContent",19734,25997,0.3113227
+"c:/Users/ArPaVa/Documents/VS Code/JumpingCube_MonoGame/JumpingCube/Content/Rectangle.png","c:/Users/ArPaVa/Documents/VS Code/JumpingCube_MonoGame/JumpingCube/Content/bin/DesktopGL/Rectangle.xnb","TextureProcessor","Texture2DContent",68430,90661,0.2140944
