@@ -25,6 +25,12 @@
 /processorParam:TextureFormat=Color
 /build:Cube.png
 
+#begin jumping_sound.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:jumping_sound.mp3
+
 #begin Rectangle.png
 /importer:TextureImporter
 /processor:TextureProcessor
