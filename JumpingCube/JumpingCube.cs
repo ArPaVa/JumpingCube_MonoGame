@@ -17,7 +17,9 @@ public class JumpingCube : Game
     private int score;
     private int highscore;
     private int next_difficulty;
+    private int next_key;
     private Texture2D cube;
+    private Texture2D cubedj;
     private int[] Cube_position {get; set;}
     private int[] Cube_dimensions {get; set;}
 
@@ -65,6 +67,8 @@ public class JumpingCube : Game
         Rectangles_dimensions = new int[2];
         Rectangles_dimensions[0]= _graphics.PreferredBackBufferWidth/16;
         Rectangles_dimensions[1]= _graphics.PreferredBackBufferHeight/6;
+
+        next_key=0;
         x_impulse = 0;
         speed = Cube_dimensions[0]/10;
         next_obstacle = 0;
@@ -76,7 +80,9 @@ public class JumpingCube : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         cube = Content.Load<Texture2D>("cube");
+        cubedj = Content.Load<Texture2D>("cubedj");
         cube = ChangeColorToTransparent(GraphicsDevice,cube,Color.White);
+        cubedj = ChangeColorToTransparent(GraphicsDevice,cubedj,Color.White);
         jumping_sound = Content.Load<SoundEffect>("jumping_sound");
         pixel = new Texture2D(GraphicsDevice, 1, 1);
         rectangle = Content.Load<Texture2D>("rectangle");
@@ -89,7 +95,7 @@ public class JumpingCube : Game
 
     protected override void Update(GameTime gameTime)
     {   if(!died)
-        {
+        {   next_key-=1;
             next_difficulty +=1;
             if (next_difficulty>=250)
             {next_difficulty = 0;
@@ -124,11 +130,20 @@ public class JumpingCube : Game
                     
                 if (CubeIsSuported())
                     x_impulse = 0;
-
-                if (CubeIsSuported() && Keyboard.GetState().IsKeyDown(Keys.Space))
+                
+                if (!CubeIsSuported() && Keyboard.GetState().IsKeyDown(Keys.Space) && double_jump && next_key<0)
+                {   double_jump = false;
+                    double_jump_timer = 200;
+                    x_impulse = (int)-(Cube_dimensions[0]/4);
+                    jumping_sound.Play();
+                    next_key = 10;
+                }
+                if (CubeIsSuported() && Keyboard.GetState().IsKeyDown(Keys.Space)&& next_key<0)
                 {   x_impulse = (int)-(Cube_dimensions[0]/3.3);
                     jumping_sound.Play();
+                    next_key =10;
                 }
+                
                 if (Bg_rect != null)
                 for (int i= 0;i < Bg_rect.Count;i ++)
                 {
@@ -137,6 +152,9 @@ public class JumpingCube : Game
                         Bg_rect.RemoveAt(i);
 
                 }
+                double_jump_timer -= 1;
+                if (double_jump_timer<=0 && CubeIsSuported())
+                    double_jump = true;
                 next_obstacle-= speed;
                 if (next_obstacle <= 0)
                 {
@@ -160,7 +178,8 @@ public class JumpingCube : Game
                 next_difficulty = 0;
                 
                 died = false;
-
+                double_jump=true;
+                double_jump_timer = 0;
                 Cube_position =  new int[2];
                 Cube_position[0]= 30;
                 Cube_position[1]= _graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4 - _graphics.PreferredBackBufferHeight/10;
@@ -191,9 +210,11 @@ public class JumpingCube : Game
         _spriteBatch.DrawString(scores_font, "Highscore:"+highscore, new Vector2(120, 10), Color.Black);
         _spriteBatch.DrawString(scores_font, "Difficulty:"+speed/7+"."+speed%7, new Vector2(280, 10), Color.Black);
 
+        if(double_jump)
+            _spriteBatch.Draw(cubedj ,new Rectangle(Cube_position[0],Cube_position[1],Cube_dimensions[0],Cube_dimensions[1]), Color.OldLace);
+        else
+            _spriteBatch.Draw(cube ,new Rectangle(Cube_position[0],Cube_position[1],Cube_dimensions[0],Cube_dimensions[1]), Color.OldLace);
         // Drawn rectangle
-        _spriteBatch.Draw(cube ,new Rectangle(Cube_position[0],Cube_position[1],Cube_dimensions[0],Cube_dimensions[1]), Color.OldLace);
-        
         for (int i= 0;i < Bg_rect.Count;i ++)
         {   _spriteBatch.Draw(Bg_rect[i].texture,new Rectangle(Bg_rect[i].x_pos,Bg_rect[i].y_pos-Rectangles_dimensions[1],Rectangles_dimensions[0],Rectangles_dimensions[1]), Color.OldLace);}
         
