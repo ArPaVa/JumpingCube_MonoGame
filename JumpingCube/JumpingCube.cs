@@ -29,7 +29,10 @@ public class JumpingCube : Game
     private Texture2D rectangle;
     private List<BadGuyRectangle> Bg_rect {get; set;}
     private int[] Rectangles_dimensions {get; set;}
-     private int speed { get; set;}
+    private Texture2D ground;
+    private List<Ground> Bg_ground {get; set;}
+    private int[] Ground_dimensions {get; set;}
+    private int speed { get; set;}
 
     private int x_impulse { get; set; }
     private GraphicsDeviceManager _graphics;
@@ -41,8 +44,8 @@ public class JumpingCube : Game
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
-        _graphics.PreferredBackBufferWidth = 1280;
-        _graphics.PreferredBackBufferHeight = 720;
+        _graphics.PreferredBackBufferWidth = 1920;
+        _graphics.PreferredBackBufferHeight = 1080;
         _graphics.ApplyChanges();  
     }
 
@@ -68,9 +71,16 @@ public class JumpingCube : Game
         Rectangles_dimensions[0]= _graphics.PreferredBackBufferWidth/16;
         Rectangles_dimensions[1]= _graphics.PreferredBackBufferHeight/6;
 
+        Ground_dimensions = new int[2];
+        Ground_dimensions[0]= _graphics.PreferredBackBufferWidth/10;
+        Ground_dimensions[1]= _graphics.PreferredBackBufferHeight/4;
+
+        Bg_ground = [];
+        
+
         next_key=0;
         x_impulse = 0;
-        speed = Cube_dimensions[0]/10;
+        speed = 12;
         next_obstacle = 0;
         Bg_rect = [];
         base.Initialize();
@@ -86,20 +96,30 @@ public class JumpingCube : Game
         jumping_sound = Content.Load<SoundEffect>("jumping_sound");
         pixel = new Texture2D(GraphicsDevice, 1, 1);
         rectangle = Content.Load<Texture2D>("rectangle");
+        ground = Content.Load<Texture2D>("ground");
         scores_font = Content.Load<SpriteFont>("scores_font");
         Color[] data = new Color[1];
         data[0] = Color.White; 
         pixel.SetData(data);
+        for(int i = 0; i < 12;i++)
+        {Bg_ground.Add(new Ground(i*Ground_dimensions[0],_graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4,ground));
+        
+        }
+        
         // TODO: use this.Content to load your game content here
     }
 
     protected override void Update(GameTime gameTime)
-    {   if(!died)
-        {   next_key-=1;
+    {   
+        if(!died)
+        {   
+            
+            
+            next_key-=1;
             next_difficulty +=1;
             if (next_difficulty>=250)
             {next_difficulty = 0;
-            speed += Cube_dimensions[0]/70;
+            speed += 1;
 
             }
             score += 1;
@@ -108,7 +128,6 @@ public class JumpingCube : Game
                 Rectangle rectangle_rectangle = new Rectangle (Bg_rect[i].x_pos,Bg_rect[i].y_pos-Rectangles_dimensions[1],Rectangles_dimensions[0],Rectangles_dimensions[1]);
                 if (cube_rectangle.Intersects(rectangle_rectangle))
                     died = true;
-                
             }
             if (!died)
             {
@@ -138,6 +157,9 @@ public class JumpingCube : Game
                     jumping_sound.Play();
                     next_key = 10;
                 }
+                double_jump_timer -= 1;
+                if (double_jump_timer<=0 && CubeIsSuported())
+                    double_jump = true;
                 if (CubeIsSuported() && Keyboard.GetState().IsKeyDown(Keys.Space)&& next_key<0)
                 {   x_impulse = (int)-(Cube_dimensions[0]/3.3);
                     jumping_sound.Play();
@@ -145,28 +167,40 @@ public class JumpingCube : Game
                 }
                 
                 if (Bg_rect != null)
-                for (int i= 0;i < Bg_rect.Count;i ++)
                 {
-                    Bg_rect[i].x_pos -= speed;
-                    if (Bg_rect[i].x_pos<-70)
-                        Bg_rect.RemoveAt(i);
-
-                }
-                double_jump_timer -= 1;
-                if (double_jump_timer<=0 && CubeIsSuported())
-                    double_jump = true;
+                    for (int i= 0;i < Bg_rect.Count;i ++)
+                    {
+                        Bg_rect[i].x_pos -= speed;
+                        if (Bg_rect[i].x_pos<-Rectangles_dimensions[0])
+                            {Bg_rect.RemoveAt(i);
+                            if (Bg_rect.Count > i)
+                                Bg_rect[i].x_pos -= speed;}
+                    }}
+                if (Bg_ground != null)
+                {
+                    for (int i= 0;i < Bg_ground.Count;i ++)
+                    {   //Console.WriteLine($"{i} {Bg_ground[i].x_pos}");
+                        Bg_ground[i].x_pos -= speed;
+                        if (Bg_ground[i].x_pos<=-Ground_dimensions[0])
+                            Bg_ground[i].x_pos += 2304; //2112
+                    }}
                 next_obstacle-= speed;
                 if (next_obstacle <= 0)
                 {
                     Random random = new Random();
                     int randm = random.Next(1,30);
-                    if (randm >= 30-speed)
+                    if (randm >= 20)
                     {
                         Bg_rect.Add(new BadGuyRectangle(_graphics.PreferredBackBufferWidth,_graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4,rectangle));
-                        int randm_gap = random.Next(1,Rectangles_dimensions[1]/2);
-                        next_obstacle = 3*Rectangles_dimensions[1] + randm_gap*speed;
+                        //int randm_gap = random.Next(1,Rectangles_dimensions[1]/2);
+                        next_obstacle = 3*Rectangles_dimensions[1]+ 2*speed;
                         
-                    }}}}
+                    }
+                    else
+                    {
+                        next_obstacle += Rectangles_dimensions[0];
+                    }
+                    }}}
         else
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                     Exit();
@@ -191,8 +225,9 @@ public class JumpingCube : Game
                 Rectangles_dimensions = new int[2];
                 Rectangles_dimensions[0]= _graphics.PreferredBackBufferWidth/16;
                 Rectangles_dimensions[1]= _graphics.PreferredBackBufferHeight/6;
+
                 x_impulse = 0;
-                speed = Cube_dimensions[0]/10;
+                speed = 10;
                 next_obstacle = 0;
                 Bg_rect = [];
 
@@ -217,9 +252,18 @@ public class JumpingCube : Game
         // Drawn rectangle
         for (int i= 0;i < Bg_rect.Count;i ++)
         {   _spriteBatch.Draw(Bg_rect[i].texture,new Rectangle(Bg_rect[i].x_pos,Bg_rect[i].y_pos-Rectangles_dimensions[1],Rectangles_dimensions[0],Rectangles_dimensions[1]), Color.OldLace);}
+        // Drawn ground
+        for (int i= 0;i < Bg_ground.Count;i ++)
+        {   _spriteBatch.Draw(Bg_ground[i].texture,new Rectangle(Bg_ground[i].x_pos,Bg_ground[i].y_pos,Ground_dimensions[0],Ground_dimensions[1]), Color.OldLace);}
+        //if (Bg_ground[0].texture != null)
+        //{_spriteBatch.Draw(Bg_ground[0].texture,new Rectangle(Bg_ground[0].x_pos,Bg_ground[0].y_pos,Ground_dimensions[0],Ground_dimensions[1]),Color.White);}
+        //else
+        //{    Console.WriteLine("Ground texture failed loading");}
+        
         
         // Drawn soil
-        DrawLine(new Vector2(0, _graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4), new Vector2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4), 5, Color.Brown);
+        //DrawLine(new Vector2(0, _graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4), new Vector2(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight-_graphics.PreferredBackBufferHeight/4), 5, Color.Brown);
+        
         if (died)
         _spriteBatch.DrawString(scores_font, "You died. To play again press ENTER, to quit press ESC", new Vector2(_graphics.PreferredBackBufferWidth/2-300, _graphics.PreferredBackBufferHeight/2), Color.Black);
 
@@ -280,6 +324,21 @@ public class BadGuyRectangle
     
     public Texture2D texture {get; set;}
     public BadGuyRectangle(int x_pos, int y_pos,Texture2D texture)
+    {
+        this.x_pos = x_pos;
+        this.y_pos = y_pos;
+        
+        this.texture = texture;
+    }
+
+}
+public class Ground
+{
+    public int x_pos {get; set;}
+    public int y_pos {get; set;}
+    
+    public Texture2D texture {get; set;}
+    public Ground(int x_pos, int y_pos,Texture2D texture)
     {
         this.x_pos = x_pos;
         this.y_pos = y_pos;
